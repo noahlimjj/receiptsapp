@@ -3,7 +3,8 @@ const axios = require('axios');
 // This is a test script to simulate a Telegram webhook event
 async function testWebhook() {
   try {
-    const webhookUrl = 'https://68b0ff28d95c.ngrok-free.app/.netlify/functions/telegram-bot';
+    // Use local Netlify dev server
+const webhookUrl = 'http://localhost:4000/.netlify/functions/telegram-bot';
     
     // Sample Telegram update object (simulating a message with a photo)
     const update = {
@@ -11,13 +12,13 @@ async function testWebhook() {
       message: {
         message_id: 1,
         from: {
-          id: 714320320,
+          id: 714320320, // User's actual chat ID
           is_bot: false,
           first_name: 'Test',
           username: 'testuser'
         },
         chat: {
-          id: 714320320,
+          id: 714320320, // User's actual chat ID
           first_name: 'Test',
           username: 'testuser',
           type: 'private'

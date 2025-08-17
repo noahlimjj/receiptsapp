@@ -4,12 +4,13 @@
   functions = "functions"
 
 [dev]
-  command = "npm run start"
-  targetPort = 3000  # The port your application runs on
-  port = 8888        # The port Netlify Dev will use
+  command = "npm run build"
+  port = 3001
+  targetPort = 3002
   publish = "public"
   functions = "functions"
   framework = "#custom"
+  autoLaunch = true
 
 [[redirects]]
   from = "/api/*"

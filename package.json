@@ -4,7 +4,7 @@
   "description": "A Telegram bot that processes receipts and saves them to Notion",
   "main": "index.js",
   "scripts": {
-    "start": "http-server -p 3000 public",
+    "start": "netlify dev",
     "build": "echo 'Build complete' && exit 0",
     "dev": "netlify dev",
     "test": "jest"
@@ -22,13 +22,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@notionhq/client": "^2.2.14",
+    "@notionhq/client": "^2.3.0",
     "axios": "^1.6.5",
-    "jimp": "^0.22.10",
+    "jimp": "^0.22.12",
     "netlify-lambda": "^2.0.16",
     "node-telegram-bot-api": "^0.64.0",
     "pdf-parse": "^1.1.1",
-    "puppeteer": "^24.16.2"
+    "puppeteer": "^24.16.2",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "dotenv": "^17.2.1",
