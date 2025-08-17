@@ -96,13 +96,17 @@ async function processReceiptAsync(msg, chatId, statusMessageId) {
       file_size: photo.file_size
     });
     
+    // Get file URL for Notion
+    const file = await bot.getFile(fileId);
+    const fileUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
+    
     // Update status
     await bot.editMessageText('⬇️ Downloading receipt image...', {
       chat_id: chatId,
       message_id: statusMessageId
     });
     
-    // Download the image
+    // Download the image for OCR processing
     tempFilePath = path.join(os.tmpdir(), `receipt_${Date.now()}.jpg`);
     await downloadFile(fileId, tempFilePath);
     
@@ -129,27 +133,68 @@ async function processReceiptAsync(msg, chatId, statusMessageId) {
       message_id: statusMessageId
     });
     
+    // Prepare properties for Notion based on the database schema
+    const properties = {
+      'Name': {
+        title: [
+          {
+            text: {
+              content: receiptData.amount ? `Receipt - $${receiptData.amount.toFixed(2)}` : 'New Receipt'
+            }
+          }
+        ]
+      },
+      'amount': {
+        number: receiptData.amount || 0
+      },
+      'Date': {
+        date: { start: receiptData.date }
+      },
+      'type': {
+        rich_text: [
+          {
+            text: {
+              content: 'receipt' // Default type
+            }
+          }
+        ]
+      },
+      'receipt url': {
+        rich_text: [
+          {
+            text: {
+              content: fileUrl,
+              link: { url: fileUrl }
+            }
+          }
+        ]
+      }
+    };
+
     // Create Notion page
-    const pageId = await createNotionPage(receiptData);
+    const page = await notion.pages.create({
+      parent: { database_id: process.env.NOTION_DATABASE_ID },
+      properties: properties
+    });
     
-    // Send success message with Notion link if available
-    const notionLink = pageId 
-      ? `https://www.notion.so/${pageId.replace(/-/g, '')}`
-      : 'Notion page';
+    console.log('Created Notion page:', page.id);
     
-    let responseText = '✅ Receipt processed successfully!\n\n';
-    if (receiptData.amount) responseText += `Amount: $${receiptData.amount}\n`;
+    // Send success message with Notion link
+    const notionLink = `https://www.notion.so/${page.id.replace(/-/g, '')}`;
+    
+    let responseText = '✅ Receipt saved to Notion!\n\n';
+    if (receiptData.amount) responseText += `Amount: $${receiptData.amount.toFixed(2)}\n`;
     if (receiptData.date) responseText += `Date: ${receiptData.date}\n`;
     
     await bot.editMessageText(responseText, {
       chat_id: chatId,
       message_id: statusMessageId,
       parse_mode: 'Markdown',
-      reply_markup: pageId ? {
+      reply_markup: {
         inline_keyboard: [[
           { text: 'View in Notion', url: notionLink }
         ]]
-      } : undefined
+      }
     });
     
   } catch (error) {
@@ -226,17 +271,37 @@ async function extractTextFromImage(imagePath) {
 
 // Helper function to extract receipt data from text
 function extractReceiptData(text) {
-  // This is a simple regex-based extractor
-  // In a real app, you might want to use more sophisticated NLP or patterns
-  const amountMatch = text.match(/\$?\s*\d+\.\d{2}/);
-  const dateMatch = text.match(/\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/);
-  
-  return {
-    amount: amountMatch ? amountMatch[0].replace(/[^\d.]/g, '') : null,
-    date: dateMatch ? dateMatch[0] : new Date().toISOString().split('T')[0],
-    rawText: text.substring(0, 2000), // Store first 2000 chars of OCR text
-    processed: false // Mark as unprocessed for manual review if needed
-  };
+  try {
+    // This is a simple regex-based extractor
+    // In a real app, you might want to use more sophisticated NLP or patterns
+    const amountMatch = text.match(/\$?\s*\d+\.\d{2}/);
+    const dateMatch = text.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+    
+    let formattedDate = new Date().toISOString().split('T')[0]; // Default to today in YYYY-MM-DD
+    
+    if (dateMatch) {
+      // Convert matched date to YYYY-MM-DD format
+      const [_, month, day, year] = dateMatch;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      formattedDate = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    
+    return {
+      amount: amountMatch ? parseFloat(amountMatch[0].replace(/[^\d.]/g, '')) : null,
+      date: formattedDate,
+      rawText: text.substring(0, 2000), // Store first 2000 chars of OCR text
+      processed: false // Mark as unprocessed for manual review if needed
+    };
+  } catch (error) {
+    console.error('Error extracting receipt data:', error);
+    // Return default values with today's date if extraction fails
+    return {
+      amount: null,
+      date: new Date().toISOString().split('T')[0],
+      rawText: text.substring(0, 2000),
+      processed: false
+    };
+  }
 }
 
 // Helper function to create a Notion page
@@ -246,45 +311,72 @@ async function createNotionPage(receiptData) {
     return null;
   }
 
+  if (!process.env.NOTION_API_KEY) {
+    console.error('NOTION_API_KEY is not set');
+    return null;
+  }
+
   try {
+    console.log('Creating Notion page with data:', {
+      amount: receiptData.amount,
+      date: receiptData.date,
+      hasRawText: !!receiptData.rawText,
+      processed: receiptData.processed
+    });
+
+    const properties = {
+      'Name': {
+        title: [
+          {
+            text: {
+              content: `Receipt ${receiptData.amount ? `- $${receiptData.amount.toFixed(2)}` : ''}`
+            }
+          }
+        ]
+      },
+      'Status': {
+        select: { name: receiptData.processed ? 'Processed' : 'Needs Review' }
+      },
+      'OCR Text': {
+        rich_text: [
+          {
+            text: {
+              content: receiptData.rawText || 'No text extracted'
+            }
+          }
+        ]
+      }
+    };
+
+    // Only add Amount if it exists
+    if (receiptData.amount !== null && !isNaN(receiptData.amount)) {
+      properties['Amount'] = {
+        number: parseFloat(receiptData.amount.toFixed(2))
+      };
+    }
+
+    // Only add Date if it exists and is valid
+    if (receiptData.date) {
+      properties['Date'] = {
+        date: { start: receiptData.date }
+      };
+    }
+
     const response = await notion.pages.create({
       parent: { database_id: process.env.NOTION_DATABASE_ID },
-      properties: {
-        'Name': {
-          title: [
-            {
-              text: {
-                content: `Receipt ${receiptData.amount ? `- $${receiptData.amount}` : ''}`
-              }
-            }
-          ]
-        },
-        'Amount': {
-          number: receiptData.amount ? parseFloat(receiptData.amount) : null
-        },
-        'Date': {
-          date: { start: receiptData.date }
-        },
-        'Status': {
-          select: { name: receiptData.processed ? 'Processed' : 'Needs Review' }
-        },
-        'OCR Text': {
-          rich_text: [
-            {
-              text: {
-                content: receiptData.rawText || 'No text extracted'
-              }
-            }
-          ]
-        }
-      }
+      properties: properties
     });
     
-    console.log('Created Notion page:', response.id);
+    console.log('Successfully created Notion page:', response.id);
     return response.id;
   } catch (error) {
-    console.error('Error creating Notion page:', error);
-    throw error;
+    console.error('Error creating Notion page:', {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      headers: error.headers
+    });
+    throw new Error(`Failed to create Notion page: ${error.message}`);
   }
 }
 
