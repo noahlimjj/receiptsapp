@@ -27,7 +27,8 @@
     "jimp": "^0.22.10",
     "netlify-lambda": "^2.0.16",
     "node-telegram-bot-api": "^0.64.0",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "puppeteer": "^24.16.2"
   },
   "devDependencies": {
     "dotenv": "^17.2.1",
