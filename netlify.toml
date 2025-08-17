@@ -5,8 +5,8 @@
 
 [dev]
   command = "npm run start"
-  targetPort = 3000  # Match the port used by http-server
-  port = 3000        # Match the port used by http-server
+  targetPort = 3000  # The port your application runs on
+  port = 8888        # The port Netlify Dev will use
   publish = "public"
   functions = "functions"
   framework = "#custom"
