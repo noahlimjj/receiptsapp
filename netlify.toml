@@ -1,0 +1,36 @@
+[build]
+  command = "npm run build"
+  publish = "public"
+  functions = "functions"
+
+[dev]
+  command = "npm run start"
+  targetPort = 3000  # Match the port used by http-server
+  port = 3000        # Match the port used by http-server
+  publish = "public"
+  functions = "functions"
+  framework = "#custom"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/telegram-bot"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"

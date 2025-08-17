@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Bot for Notion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --gray-100: #F9FAFB;
+            --gray-200: #F3F4F6;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-900);
+            background-color: #F9FAFB;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #4F46E5, #7C3AED);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        
+        .tagline {
+            font-size: 1.25rem;
+            color: var(--gray-700);
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+        
+        .cta-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .cta-button svg {
+            margin-right: 0.5rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+        
+        .feature {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gray-200);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .feature:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: #EEF2FF;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .feature h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
+        }
+        
+        .feature p {
+            color: var(--gray-700);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+        
+        .how-it-works {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 3rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--gray-900);
+        }
+        
+        .steps {
+            counter-reset: step;
+        }
+        
+        .step {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #EEF2FF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .step h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
+        }
+        
+        .step p {
+            color: var(--gray-700);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+        
+        .telegram-widget {
+            background: #0088CC;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .telegram-widget:hover {
+            background: #0078b4;
+            transform: translateY(-1px);
+        }
+        
+        .telegram-widget svg {
+            margin-right: 0.75rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+            
+            h1 {
+                font-size: 1.875rem;
+            }
+            
+            .tagline {
+                font-size: 1.125rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+            text-align: center;
+            line-height: 2.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .telegram-button {
+            display: inline-block;
+            background: #0088cc;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+        .telegram-button:hover {
+            background: #0078b3;
+        }
+        code {
+            background: #f0f2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Receipt Bot</h1>
+        <p>A Telegram bot that helps you store and organize your receipts in Notion.</p>
+        
+        <div class="bot-info">
+            <h2>About This Bot</h2>
+            <p>This bot allows you to:</p>
+            <ul>
+                <li>Upload receipt images or PDFs via Telegram</li>
+                <li>Automatically extract receipt details</li>
+                <li>Store all data in your Notion database</li>
+                <li>Track expenses with dates and amounts</li>
+            </ul>
+        </div>
+
+        <div class="steps">
+            <h2>How to Get Started</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Add the bot to Telegram</strong>
+                <p>Click the button below to start chatting with the bot:</p>
+                <a href="https://t.me/YourReceiptBot" class="telegram-button" target="_blank">Open in Telegram</a>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Set up your Notion integration</strong>
+                <p>Create a new integration in Notion and get your API key.</p>
+                <p>Create a database in Notion with the following properties:</p>
+                <ul>
+                    <li><code>Name</code> (title)</li>
+                    <li><code>Date</code> (date)</li>
+                    <li><code>Type</code> (select)</li>
+                    <li><code>Status</code> (select)</li>
+                    <li><code>Amount</code> (number)</li>
+                    <li><code>Receipt URL</code> (url)</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Start sending receipts</strong>
+                <p>Simply send a photo of your receipt or a PDF to the bot, and it will be automatically processed and added to your Notion database.</p>
+            </div>
+        </div>
+        
+        <div class="bot-info">
+            <h2>Need Help?</h2>
+            <p>If you encounter any issues or have questions, please contact support.</p>
+        </div>
+    </div>
+</body>
+</html>

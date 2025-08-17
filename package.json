@@ -1,0 +1,34 @@
+{
+  "name": "receipt-bot",
+  "version": "1.0.0",
+  "description": "A Telegram bot that processes receipts and saves them to Notion",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -p 3000",
+    "build": "echo 'Build complete'",
+    "dev": "netlify dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "notion",
+    "receipts",
+    "expense tracking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.14",
+    "axios": "^1.6.5",
+    "jimp": "^0.22.10",
+    "netlify-lambda": "^2.0.16",
+    "node-telegram-bot-api": "^0.64.0",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.1",
+    "http-server": "^14.1.1",
+    "jest": "^30.0.5"
+  }
+}
