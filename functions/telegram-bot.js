@@ -155,6 +155,21 @@ exports.handler = async (event, context) => {
 // Process receipt and save to Notion
 async function processReceipt(chatId, receipt) {
   try {
+    console.log('Processing receipt for chat:', chatId);
+    console.log('Receipt data:', JSON.stringify(receipt, null, 2));
+    
+    // Validate required fields
+    if (!receipt || !receipt.date || !receipt.text) {
+      throw new Error('Missing required receipt data');
+    }
+    
+    // Ensure NOTION_DATABASE_ID is set
+    if (!process.env.NOTION_DATABASE_ID) {
+      throw new Error('NOTION_DATABASE_ID is not set in environment variables');
+    }
+    
+    console.log('Creating Notion page in database:', process.env.NOTION_DATABASE_ID);
+    
     // Create a new page in Notion
     const response = await notion.pages.create({
       parent: { database_id: process.env.NOTION_DATABASE_ID },
@@ -208,10 +223,18 @@ async function processReceipt(chatId, receipt) {
       ]
     });
 
+    console.log('Successfully created Notion page:', response.id);
     await bot.sendMessage(chatId, '✅ Receipt saved to Notion!');
   } catch (error) {
     console.error('Error saving to Notion:', error);
-    await bot.sendMessage(chatId, '❌ Error saving receipt to Notion. Please try again.');
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      status: error.status,
+      code: error.code
+    });
+    await bot.sendMessage(chatId, `❌ Error saving receipt to Notion: ${error.message}`);
   }
 }
 
